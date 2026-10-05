@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#6552cc">
+  <title>Together · Shared action items</title>
+  <link rel="icon" href="teams/color.png">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.min.js"></script>
+  <script defer src="https://res.cdn.office.net/teams-js/2.31.0/js/MicrosoftTeams.min.js"></script>
+  <script defer src="config.js"></script>
+  <script defer src="domain.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div id="setup" class="tg-auth" hidden>
+      <div class="tg-brand"><span class="tg-logo">↗</span>together.</div>
+      <h1>Let’s get connected.</h1><p>Add your Supabase project URL and publishable key to <code>config.js</code>, then run <code>supabase.sql</code> in your project’s SQL editor.</p><p>Follow the included README for the full setup.</p>
+    </div>
+    <section id="auth" class="tg-auth" hidden>
+      <div class="tg-brand"><span class="tg-logo">↗</span>together.</div>
+      <h1 id="auth-title">Move forward, together.</h1><p class="tg-subtitle">Sign in to your group’s shared action items.</p>
+      <form id="auth-form">
+        <label class="tg-field">Email<input id="email" type="email" autocomplete="email" required maxlength="254"></label>
+        <label class="tg-field">Password<input id="password" type="password" autocomplete="current-password" required minlength="10"></label>
+        <button id="auth-submit" class="tg-primary" type="submit">Sign in</button>
+      </form>
+      <div class="tg-auth-links"><button id="auth-toggle" class="tg-link">Create an account</button><button id="forgot" class="tg-link">Forgot password?</button></div>
+      <p id="auth-message" role="status"></p>
+    </section>
+    <div id="workspace" class="tg-shell" hidden>
+      <aside class="tg-sidebar">
+        <div class="tg-brand"><span class="tg-logo">↗</span>together.</div>
+        <label class="tg-group-label">Your group<select id="groups" aria-label="Choose group"></select></label>
+        <nav class="tg-nav" aria-label="Workspace"><button class="tg-active" data-view="active">☷ Action items<span class="tg-count" data-active-count>0</span></button><button data-view="completed">✓ Completed<span class="tg-count" data-completed-count>0</span></button></nav>
+        <div class="tg-members"><div class="tg-caption">Your group</div><div id="members"></div></div>
+        <button id="new-group" class="tg-cancel">＋ Create a group</button>
+        <div class="tg-sidebar-bottom">A little progress.<br>From every one of us.</div>
+      </aside>
+      <div>
+        <header class="tg-topbar"><span id="breadcrumb" class="tg-small">Action items</span><div class="tg-account"><span id="current-user" class="tg-small"></span><button id="signout" class="tg-link">Sign out</button></div></header>
+        <main class="tg-content">
+          <div class="tg-heading"><div><h1>Move forward, together.</h1><p class="tg-subtitle">One shared list. Everyone does their part.</p></div><button id="create-task" class="tg-primary">＋ New action item</button></div>
+          <div id="no-group" class="tg-empty" hidden><h2>Your group starts here.</h2><p>Create a group with everybody’s email address, or ask the organiser to include your sign-in email.</p><button id="first-group" class="tg-primary">Create your group</button></div>
+          <div id="group-content">
+            <div class="tg-rule"><span aria-hidden="true">◎</span><div><strong>Done means everyone is done.</strong><span id="rule-text"></span></div></div>
+            <div class="tg-list-toolbar"><div class="tg-tabs" role="tablist" aria-label="Action item status"><button id="tab-active" role="tab" aria-selected="true" aria-controls="task-list" data-view="active">Active <span data-active-count>0</span></button><button id="tab-completed" role="tab" aria-selected="false" aria-controls="task-list" data-view="completed">Completed <span data-completed-count>0</span></button></div><button id="refresh" class="tg-link">↻ Refresh</button></div>
+            <div id="notice" class="tg-toast" role="status" hidden></div>
+            <div id="task-list" role="tabpanel" aria-labelledby="tab-active"></div>
+            <p id="sync-state" class="tg-footnote" role="status">Loading shared progress…</p>
+          </div>
+        </main>
+      </div>
+    </div>
+    <div id="modal-layer" class="tg-modal-layer" hidden>
+      <section class="tg-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="tg-modal-header"><h2 id="modal-title"></h2><button id="modal-close" class="tg-close" aria-label="Close">×</button></div>
+        <form id="task-form" hidden>
+          <label class="tg-field">What does everyone need to do?<input id="task-title" required maxlength="120" placeholder="e.g. Review the launch checklist"></label>
+          <label class="tg-field">Details <span class="tg-small">(optional)</span><textarea id="task-details" rows="3" maxlength="2000"></textarea></label>
+          <label class="tg-field">Due date <span class="tg-small">(optional)</span><input id="task-due" type="date"></label>
+          <div id="task-assignment-note" class="tg-modal-note"></div>
+          <div class="tg-modal-actions"><button type="button" class="tg-cancel" data-close>Cancel</button><button type="submit" class="tg-primary">Create action item</button></div>
+        </form>
+        <form id="group-form" hidden>
+          <label class="tg-field">Group name<input id="group-name" required maxlength="80" placeholder="Product team"></label>
+          <label class="tg-field">Everybody’s email address<textarea id="group-emails" rows="5" placeholder="alex@example.com&#10;jordan@example.com" maxlength="26000"></textarea></label>
+          <div class="tg-modal-note">One email per line, or separate with commas. You are included automatically. Add everyone before creating the group—even people who haven’t signed up yet. The roster is fixed for this group.</div>
+          <div class="tg-modal-actions"><button type="button" class="tg-cancel" data-close>Cancel</button><button type="submit" class="tg-primary">Create group</button></div>
+        </form>
+        <p id="modal-message" role="alert"></p>
+      </section>
+    </div>
+  </div>
+  <noscript>Please enable JavaScript to use Together.</noscript>
+</body>
+</html>
