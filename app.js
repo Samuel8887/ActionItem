@@ -18,10 +18,11 @@
   }
   function openModal(kind, trigger) {
     lastTrigger = trigger; $('modal-message').textContent = '';
-    $('modal-title').textContent = kind === 'task' ? 'New action item' : 'Create your group';
+    $('modal-title').textContent = kind === 'task' ? 'New action item' : kind === 'members' ? 'Add group members' : 'Create your group';
     $('task-form').hidden = kind !== 'task'; $('group-form').hidden = kind !== 'group';
+    $('member-form').hidden = kind !== 'members';
     $('task-assignment-note').textContent = `Assigned to all ${members.length} members. Completes only when every member has clicked Done.`;
-    $('modal-layer').hidden = false; (kind === 'task' ? $('task-title') : $('group-name')).focus();
+    $('modal-layer').hidden = false; (kind === 'task' ? $('task-title') : kind === 'members' ? $('member-emails') : $('group-name')).focus();
   }
   function closeModal() {$('modal-layer').hidden = true; lastTrigger?.focus();}
   function updateCounts() {
@@ -49,6 +50,7 @@
     $('groups').innerHTML = groups.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join('');
     $('groups').value = groupId;
     $('no-group').hidden = !!group; $('group-content').hidden = !group; $('create-task').disabled = !group;
+    $('add-members').hidden = !group || group.owner_id !== user.id;
     $('breadcrumb').textContent = group ? group.name + ' / Action items' : 'Your workspace';
     $('members').innerHTML = members.map(m=>`<div class="tg-member"><span class="tg-avatar">${esc(name(m.email).slice(0,2).toUpperCase())}</span><span>${esc(name(m.email))}${m.email===user.email.toLowerCase()?' · you':''}</span></div>`).join('');
     $('rule-text').textContent = `Items stay here until all ${members.length} members mark them done. Then they move to Completed.`;
@@ -62,7 +64,7 @@
     const stamp = ++generation, uid = user.id;
     syncing = true; $('sync-state').textContent = 'Syncing shared progress…';
     try {
-      const freshGroups = check(await db.from('tg_groups').select('id,name').order('created_at'));
+      const freshGroups = check(await db.from('tg_groups').select('id,name,owner_id').order('created_at'));
       if(stamp !== generation || user?.id !== uid) return;
       groups = freshGroups;
       if(!groups.some(g => g.id === groupId)) groupId = groups.find(g=>g.id===requestedGroup)?.id || groups[0]?.id || '';
@@ -89,6 +91,7 @@
   $('groups').addEventListener('change',()=>{groupId=$('groups').value;tasks=[];members=[];view='active';renderGroup();sync(true);});
   $('refresh').addEventListener('click',()=>sync(true));
   $('create-task').addEventListener('click',e=>openModal('task',e.currentTarget));
+  $('add-members').addEventListener('click',e=>openModal('members',e.currentTarget));
   ['new-group','first-group'].forEach(id=>$(id).addEventListener('click',e=>openModal('group',e.currentTarget)));
   $('modal-close').addEventListener('click',closeModal);document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal));
   $('modal-layer').addEventListener('click',e=>{if(e.target===$('modal-layer'))closeModal();});
@@ -107,6 +110,15 @@
     const title=$('group-name').value.trim();if(!title)throw new Error('Enter a group name.');
     groupId=check(await db.rpc('tg_create_group',{p_name:title,p_emails:emails}));
     e.target.reset();closeModal();view='active';await sync(true);message('notice','Group created. Share this page’s URL with the group. Each person signs up using their listed email.');
+  });});
+  $('member-form').addEventListener('submit',e=>{e.preventDefault();submit(e.target,async()=>{
+    const selected = groupId;
+    if(groups.find(g=>g.id===selected)?.owner_id !== user.id) throw new Error('Only the group administrator can add members.');
+    const emails=parseMembers($('member-emails').value,'');
+    if(!emails.length) throw new Error('Enter at least one email address.');
+    const result=check(await db.rpc('tg_add_members',{p_group_id:selected,p_emails:emails}));
+    e.target.reset();closeModal();await sync(true);
+    message('notice',result.added ? `${result.added} member(s) added to the group and active action items. Share this page with them; they sign in with their listed email.` : 'These email addresses are already in the group.');
   });});
   $('task-list').addEventListener('click',async e=>{
     const button=e.target.closest('[data-toggle]');if(!button)return;

@@ -45,6 +45,7 @@
           <div class="tg-heading"><div><h1>Move forward, together.</h1><p class="tg-subtitle">One shared list. Everyone does their part.</p></div><button id="create-task" class="tg-primary">＋ New action item</button></div>
           <div id="no-group" class="tg-empty" hidden><h2>Your group starts here.</h2><p>Create a group with everybody’s email address, or ask the organiser to include your sign-in email.</p><button id="first-group" class="tg-primary">Create your group</button></div>
           <div id="group-content">
+            <button id="add-members" class="tg-cancel" hidden>＋ Add members</button>
             <div class="tg-rule"><span aria-hidden="true">◎</span><div><strong>Done means everyone is done.</strong><span id="rule-text"></span></div></div>
             <div class="tg-list-toolbar"><div class="tg-tabs" role="tablist" aria-label="Action item status"><button id="tab-active" role="tab" aria-selected="true" aria-controls="task-list" data-view="active">Active <span data-active-count>0</span></button><button id="tab-completed" role="tab" aria-selected="false" aria-controls="task-list" data-view="completed">Completed <span data-completed-count>0</span></button></div><button id="refresh" class="tg-link">↻ Refresh</button></div>
             <div id="notice" class="tg-toast" role="status" hidden></div>
@@ -67,8 +68,13 @@
         <form id="group-form" hidden>
           <label class="tg-field">Group name<input id="group-name" required maxlength="80" placeholder="Product team"></label>
           <label class="tg-field">Everybody’s email address<textarea id="group-emails" rows="5" placeholder="alex@example.com&#10;jordan@example.com" maxlength="26000"></textarea></label>
-          <div class="tg-modal-note">One email per line, or separate with commas. You are included automatically. Add everyone before creating the group—even people who haven’t signed up yet. The roster is fixed for this group.</div>
+          <div class="tg-modal-note">One email per line, or separate with commas. You are included automatically. As the group administrator, you can add more members later.</div>
           <div class="tg-modal-actions"><button type="button" class="tg-cancel" data-close>Cancel</button><button type="submit" class="tg-primary">Create group</button></div>
+        </form>
+        <form id="member-form" hidden>
+          <label class="tg-field">Email addresses<textarea id="member-emails" rows="5" required maxlength="26000" placeholder="alex@example.com&#10;jordan@example.com"></textarea></label>
+          <div class="tg-modal-note">One email per line, or separate with commas. New members join this group and all active action items. Completed items keep their history. Each person needs a Supabase account with the listed email to sign in. No invitation email is sent.</div>
+          <div class="tg-modal-actions"><button type="button" class="tg-cancel" data-close>Cancel</button><button type="submit" class="tg-primary">Add members</button></div>
         </form>
         <p id="modal-message" role="alert"></p>
       </section>

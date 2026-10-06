@@ -15,7 +15,7 @@ A real shared website based on the Together design. Host the frontend on **GitHu
 - Everyone sees the same database-backed progress. Other people’s changes appear within about 15 seconds, or immediately when you click Refresh.
 - A member can belong to multiple separate groups. Access to each group is enforced in the database.
 
-Group rosters are fixed in this first version. Create a new group if membership changes. There is no automatic sync with Teams channel membership, Microsoft single sign-on, or task deletion/editing. Use the account’s listed email consistently; changing account email does not migrate old assignments.
+The group creator is its administrator and can add members by email with Add members. New members join active action items; completed items retain their original participants. Removing members is not supported. There is no automatic sync with Teams channel membership, Microsoft single sign-on, or task deletion/editing. Use the account’s listed email consistently; changing account email does not migrate old assignments.
 
 ## 1. Create the database
 
@@ -65,7 +65,7 @@ In Supabase, open **Authentication → URL Configuration**:
 Then:
 
 1. Open the site, choose **Create an account**, and confirm your email. Or sign in with an account created and confirmed by your project administrator.
-2. Choose **Create a group**. Enter its name and everyone’s email, separated by lines or commas. Your email is added automatically. Double-check the roster; it is fixed after creation.
+2. Choose **Create a group**. Enter its name and everyone’s email, separated by lines or commas. Your email is added automatically. Double-check the roster. The group administrator can add more members later.
 3. Create your first action item.
 4. Share the page’s URL with the group. It contains the group ID; that ID identifies the group but does not grant access. Each person must sign in with an email already listed in the group.
 5. Each member signs up, confirms their email, and signs in. If the group is not visible, check that their sign-in email matches the roster.
@@ -139,3 +139,7 @@ After configuring your actual project, do this small acceptance check:
 - [Teams tab requirements](https://learn.microsoft.com/en-us/microsoftteams/platform/tabs/how-to/tab-requirements)
 - [Teams configuration pages](https://learn.microsoft.com/en-us/microsoftteams/platform/tabs/how-to/create-tab-pages/configuration-page)
 - [Upload a custom Teams app](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload)
+
+## Adding members to an existing deployment
+
+Run `supabase-add-members.sql` once in the existing project to enable the Add members button. Only the group creator can add members, enforced by the database. Adding email addresses does not create login accounts or send mail. For this pilot, create accounts in Authentication → Users with Auto confirm user enabled. New members are assigned to active tasks and future tasks; completed history is preserved.
